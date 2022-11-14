@@ -37,20 +37,54 @@ public struct Pilot<R: Route> {
             .eraseToAnyPublisher()
     }
 
-    public func request<A: Decodable>(_ route: R, for type: A.Type, decoder: JSONDecoder = .init()) -> AnyPublisher<A, PilotError> {
+    public func request<T: Decodable>(_ route: R, target: T.Type, decoder: JSONDecoder = .init()) -> AnyPublisher<T, PilotError> {
         let request = URLRequest(route: route)
         Self.debugLog(info: "Request: \(request)\n\(request.allHTTPHeaderFields ?? [:])")
 
         return session.dataTaskPublisher(for: request)
             .handleEvents(receiveOutput: Pilot.processResponse)
             .map(\.data)
-            .decode(type: A.self, decoder: decoder)
+            .decode(type: T.self, decoder: decoder)
             .mapError { error -> PilotError in
                 if error is DecodingError {
                     return .decoding
                 }
 
                 return .underlying(error)
+            }
+            .handleEvents(receiveCompletion: {
+                if case let .failure(error) = $0 {
+                    Self.debugLog(error: error)
+                }
+            })
+            .eraseToAnyPublisher()
+    }
+
+    public func request<T: Decodable, E: DesignatedError>(_ route: R, target: T.Type, failure: E.Type, decoder: JSONDecoder = .init()) -> AnyPublisher<T, PilotError> {
+        let request = URLRequest(route: route)
+        Self.debugLog(info: "Request: \(request)\n\(request.allHTTPHeaderFields ?? [:])")
+
+        return session.dataTaskPublisher(for: request)
+            .handleEvents(receiveOutput: Pilot.processResponse)
+            .tryMap { data, _ in
+                do {
+                    return try decoder.decode(T.self, from: data)
+                } catch {
+                    if let designatedError = try? decoder.decode(E.self, from: data) {
+                        throw designatedError
+                    }
+                    throw error
+                }
+            }
+            .mapError { error -> PilotError in
+                switch error {
+                case is DecodingError:
+                    return .decoding
+                case let designatedError as DesignatedError:
+                    return .designated(designatedError)
+                default:
+                    return .underlying(error)
+                }
             }
             .handleEvents(receiveCompletion: {
                 if case let .failure(error) = $0 {

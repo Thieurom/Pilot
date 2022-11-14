@@ -40,7 +40,7 @@ final class PilotTests: XCTestCase {
 
 extension PilotTests {
 
-    func testRequestGetFlight_FailWithUnderlyingError() {
+    func testRequestResponse_FailWithUnderlyingError() {
         var expectedError: PilotError!
         let expectation = expectation(description: "getFlight")
         MockingURLProtocol.mock = Mock(statusCode: 500, error: URLError(.unknown), data: nil)
@@ -62,38 +62,7 @@ extension PilotTests {
         }
     }
 
-    func testRequestGetFlight_FailWithDecodingError() {
-        var expectedError: PilotError!
-        let expectation = expectation(description: "getFlight")
-
-        let json = """
-        {
-            "code": "ABC123",
-            "departure": "DEP",
-            "arrival": "ARV",
-        }
-        """
-
-        MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
-
-        network.request(.getFlight("ABC123"), for: Flight.self, decoder: jsonDecoder)
-            .sink(receiveCompletion: { completion in
-                if case let .failure(error) = completion {
-                    expectedError = error
-                    expectation.fulfill()
-                }
-            }, receiveValue: { _ in })
-            .store(in: &cancellables)
-
-        waitForExpectations(timeout: 1.0)
-
-        guard case .decoding = expectedError else {
-            XCTFail("Should return decoding error!")
-            return
-        }
-    }
-
-    func testRequestGetFlight_SuccessWithResponse() {
+    func testRequestResponse_SuccessWithResponse() {
         var expectedResponse: Response!
         let expectation = expectation(description: "getFlight")
 
@@ -125,8 +94,64 @@ extension PilotTests {
 
         XCTAssertNotNil(expectedResponse)
     }
+}
 
-    func testRequestGetFlight_SuccessWithModel() {
+extension PilotTests {
+
+    func testRequestTarget_FailWithUnderlyingError() {
+        var expectedError: PilotError!
+        let expectation = expectation(description: "getFlight")
+        MockingURLProtocol.mock = Mock(statusCode: 500, error: URLError(.unknown), data: nil)
+
+        network.request(.getFlight("ABC123"), target: [Flight].self, decoder: jsonDecoder)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    expectedError = error
+                    expectation.fulfill()
+                }
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        waitForExpectations(timeout: 1.0)
+
+        guard case .underlying = expectedError else {
+            XCTFail("Should return an underlying error!")
+            return
+        }
+    }
+
+    func testRequestTarget_APIReturnSuccess_FailWithDecodingError() {
+        var expectedError: PilotError!
+        let expectation = expectation(description: "getFlight")
+
+        let json = """
+        {
+            "code": "ABC123",
+            "departure": "DEP",
+            "arrival": "ARV",
+        }
+        """
+
+        MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
+
+        network.request(.getFlight("ABC123"), target: Flight.self, decoder: jsonDecoder)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    expectedError = error
+                    expectation.fulfill()
+                }
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        waitForExpectations(timeout: 1.0)
+
+        guard case .decoding = expectedError else {
+            XCTFail("Should return decoding error!")
+            return
+        }
+    }
+
+    func testRequestGetFlight_APIReturnSuccess_SuccessWithModel() {
         var expectedFlight: Flight!
         let expectation = expectation(description: "getFlight")
 
@@ -142,7 +167,7 @@ extension PilotTests {
 
         MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
 
-        network.request(.getFlight("ABC123"), for: Flight.self, decoder: jsonDecoder)
+        network.request(.getFlight("ABC123"), target: Flight.self, decoder: jsonDecoder)
             .sink(receiveCompletion: { completion in
                 if case .failure = completion {
                     XCTFail("Should return successfully!")
@@ -158,39 +183,156 @@ extension PilotTests {
 
         XCTAssertNotNil(expectedFlight)
     }
+}
 
-    func testRequestGetFlights_SuccessWithModels() {
-        var expectedFlights = [Flight]()
-        let expectation = expectation(description: "getFlights")
+extension PilotTests {
+
+    func testRequestTargetFailure_FailWithUnderlyingError() {
+        var expectedError: PilotError!
+        let expectation = expectation(description: "getFlight")
+        MockingURLProtocol.mock = Mock(statusCode: 500, error: URLError(.unknown), data: nil)
+
+        network.request(.getFlight("ABC123"), target: [Flight].self, failure: FlightApiError.self, decoder: jsonDecoder)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    expectedError = error
+                    expectation.fulfill()
+                }
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        waitForExpectations(timeout: 1.0)
+
+        guard case .underlying = expectedError else {
+            XCTFail("Should return an underlying error!")
+            return
+        }
+    }
+
+    func testRequestTargetFailure_APIReturnFailure_FailWithDecodingError() {
+        var expectedError: PilotError!
+        let expectation = expectation(description: "getFlight")
 
         let json = """
-        [
-            {
-                "code": "ABC123",
-                "departure": "DEP",
-                "arrival": "ARV",
-                "departure_time": 1597169495,
-                "estimated_arrival_time": 1597176695
+        {
+            "error": {
+                "code": 404
             }
-        ]
+        }
         """
 
         MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
 
-        network.request(.getFlights, for: [Flight].self, decoder: jsonDecoder)
+        network.request(.getFlight("ABC123"), target: Flight.self, failure: FlightApiError.self, decoder: jsonDecoder)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    expectedError = error
+                    expectation.fulfill()
+                }
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        waitForExpectations(timeout: 1.0)
+
+        guard case .decoding = expectedError else {
+            XCTFail("Should return decoding error!")
+            return
+        }
+    }
+
+    func testRequestTargetFailure_APIReturnFailure_FailWithDesignatedError() {
+        var expectedError: PilotError!
+        let expectation = expectation(description: "getFlight")
+
+        let json = """
+        {
+            "error": {
+                "code": 404,
+                "description": "Invalid flight id."
+            }
+        }
+        """
+
+        MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
+
+        network.request(.getFlight("ABC123"), target: Flight.self, failure: FlightApiError.self, decoder: jsonDecoder)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    expectedError = error
+                    expectation.fulfill()
+                }
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        waitForExpectations(timeout: 1.0)
+
+        guard case .designated = expectedError else {
+            XCTFail("Should return designated error!")
+            return
+        }
+    }
+
+    func testRequestTargetFailure_APIReturnSuccess_FailWithDecodingError() {
+        var expectedError: PilotError!
+        let expectation = expectation(description: "getFlight")
+
+        let json = """
+        {
+            "code": "ABC123",
+            "departure": "DEP",
+            "arrival": "ARV"
+        }
+        """
+
+        MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
+
+        network.request(.getFlight("ABC123"), target: Flight.self, failure: FlightApiError.self, decoder: jsonDecoder)
+            .sink(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    expectedError = error
+                    expectation.fulfill()
+                }
+            }, receiveValue: { _ in })
+            .store(in: &cancellables)
+
+        waitForExpectations(timeout: 1.0)
+
+        guard case .decoding = expectedError else {
+            XCTFail("Should return decoding error!")
+            return
+        }
+    }
+
+    func testRequestTargetFailure_APIReturnSuccess_SuccessWithModel() {
+        var expectedFlight: Flight!
+        let expectation = expectation(description: "getFlight")
+
+        let json = """
+        {
+            "code": "ABC123",
+            "departure": "DEP",
+            "arrival": "ARV",
+            "departure_time": 1597169495,
+            "estimated_arrival_time": 1597176695
+        }
+        """
+
+        MockingURLProtocol.mock = Mock(statusCode: 200, error: nil, json: json)
+
+        network.request(.getFlight("ABC123"), target: Flight.self, failure: FlightApiError.self, decoder: jsonDecoder)
             .sink(receiveCompletion: { completion in
                 if case .failure = completion {
                     XCTFail("Should return successfully!")
                     return
                 }
             }, receiveValue: {
-                expectedFlights = $0
+                expectedFlight = $0
                 expectation.fulfill()
             })
             .store(in: &cancellables)
 
         waitForExpectations(timeout: 1.0)
 
-        XCTAssertFalse(expectedFlights.isEmpty)
+        XCTAssertNotNil(expectedFlight)
     }
 }
