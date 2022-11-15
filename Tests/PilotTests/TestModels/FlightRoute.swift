@@ -14,16 +14,17 @@ enum FlightRoute {
     case getFlight(String)
     case addFlight
     case updateFlight
-    case deleteFlight
+    case deleteFlight(String)
 }
 
 extension FlightRoute: Route {
 
-    var baseURL: URL { URL(string: "/flights")! }
+    var baseURL: URL { URL(string: "/api/flights")! }
 
     var path: String {
         switch self {
-        case let .getFlight(id): return "/\(id)"
+        case let .getFlight(id),
+            let .deleteFlight(id): return "/\(id)"
         default: return ""
         }
     }
@@ -38,9 +39,10 @@ extension FlightRoute: Route {
     }
 
     var httpHeaders: HttpHeaders { [:] }
+
     var parameters: Parameters? {
         switch self {
-        case .getFlights: return ["size": "20"]
+        case .getFlights: return ["limit": "20"]
         default: return nil
         }
     }
