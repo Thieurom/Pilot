@@ -8,7 +8,7 @@ Pilot is a very simple HTTP network layer written in Swift, built on top of Appl
 
 ## Basic Usage
 
-Start by creating your routes to the remote resources:
+Start by creating your routes to the API:
 ```swift
 enum FlightRoute {
 
@@ -16,7 +16,7 @@ enum FlightRoute {
     case getFlight(String)
     case addFlight
     case updateFlight
-    case deleteFlight
+    case deleteFlight(String)
 }
 ```
 
@@ -24,11 +24,12 @@ Extend your routes conforming to the `Route` protocol:
 ```swift
 extension FlightRoute: Route {
 
-    var baseURL: URL { URL(string: "/flights")! }
+    var baseURL: URL { URL(string: "/api/flights")! }
 
     var path: String {
         switch self {
-        case let .getFlight(id): return "/\(id)"
+        case let .getFlight(id),
+            let .deleteFlight(id): return "/\(id)"
         default: return ""
         }
     }
@@ -74,9 +75,11 @@ network.request(.getFlights)
 ```
 The returned `response` object is the type of `Response` that contains information about `HTTPURLResponse` and `Data` if available.
 
-To get the `Decodable` model out of the response indicates the type of model and optionally your custom `JSONDecoder`:
+### Decoding JSON response
+
+To get the `Decodable` model out of the response indicates the type of model and optionally provides your custom `JSONDecoder` (Pilot uses the default one, which means with all default decoding strategies):
 ```swift
-network.request(.getFlights, for: [Flight].self, decoder: jsonDecoder)
+network.request(.getFlights, target: [Flight].self, decoder: jsonDecoder)
     .sink(receiveCompletion: { completion in
         // ...
     }, receiveValue: { flights in
@@ -85,12 +88,28 @@ network.request(.getFlights, for: [Flight].self, decoder: jsonDecoder)
     .store(in: &cancellables)
 ```
 
+### Decoding JSON error
+
+If the API you're consuming supports JSON error, it can be returned as the associated value of `PilotError.designated`:
+```swift
+network.request(.getFlights, target: [Flight].self, failure: FlightApiError.self, decoder: jsonDecoder)
+    .sink(receiveCompletion: { completion in
+        if case .failure(error) = completion, case let .designated(apiError) = error {
+            // The `apiError` is type of `FlightApiError`
+        }
+    }, receiveValue: { flights in
+        // ...
+    })
+    .store(in: &cancellables)
+```
+Just make sure your `FlightApiError` conform to `DesignatedError` (which is a typealias of `Error & Decodable`)
+
 ## Installation
 
 You can add Pilot to an Xcode project as a package dependency.
 > https://github.com/Thieurom/Pilot
 
-If you want to use Pilot in a [SwiftPM](https://www.swift.org/package-manager/) project, it's as simple as adding it to a dependencies clause in your Package.swift:
+If you want to use Pilot in a [SwiftPM](https://www.swift.org/package-manager/) project, it's as simple as adding it to a dependencies clause in your `Package.swift`:
 ```
 dependencies: [
   .package(url: "https://github.com/Thieurom/Pilot", from: "0.1.0")
