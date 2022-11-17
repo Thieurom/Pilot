@@ -1,8 +1,8 @@
 # 👨‍✈️ Pilot
 
 [![CI](https://github.com/Thieurom/Pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/Thieurom/Pilot/actions/workflows/ci.yml)
-[![Swift](https://img.shields.io/badge/Swift-5.5_5.6_5.7-red)](https://img.shields.io/badge/Swift-5.5_5.6_5.7-red)
-[![Platforms](https://img.shields.io/badge/Platforms-macOS_iOS_tvOS_watchOS-red)](https://img.shields.io/badge/Platforms-macOS_iOS_tvOS_watchOS-red)
+[![Swift](https://img.shields.io/badge/Swift-5.5_|_5.6_|_5.7-red)](https://img.shields.io/badge/Swift-5.5_5.6_5.7-red)
+[![Platforms](https://img.shields.io/badge/Platforms-macOS_|_iOS_|_tvOS_|_watchOS-red)](https://img.shields.io/badge/Platforms-macOS_iOS_tvOS_watchOS-red)
 
 Pilot is a very simple HTTP network layer written in Swift, built on top of Apple's [Combine](https://developer.apple.com/documentation/combine) framework. It's inspired by [Moya](https://github.com/Moya/Moya) and [Alamofire](https://github.com/Alamofire/Alamofire).
 
