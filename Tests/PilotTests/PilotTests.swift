@@ -6,6 +6,7 @@
 //
 
 import Combine
+import PilotType
 import XCTest
 @testable import Pilot
 

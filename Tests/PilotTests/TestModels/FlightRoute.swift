@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@testable import Pilot
+import PilotType
 
 enum FlightRoute {
 

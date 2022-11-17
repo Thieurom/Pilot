@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PilotType
 
 extension URLRequest {
 
