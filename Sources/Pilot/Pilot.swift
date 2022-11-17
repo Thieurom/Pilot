@@ -7,8 +7,9 @@
 
 import Combine
 import Foundation
+import PilotType
 
-public struct Pilot<R: Route> {
+public struct Pilot<R: Route>: PilotType {
 
     private let session: URLSession
 
