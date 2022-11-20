@@ -7,19 +7,19 @@
 
 import Foundation
 
-struct Mock {
+public struct Mock {
 
-    let statusCode: Int
-    let error: Error?
-    let data: Data?
+    public let statusCode: Int
+    public let error: Error?
+    public let data: Data?
 
-    init(statusCode: Int, error: Error?, data: Data?) {
+    public init(statusCode: Int, error: Error?, data: Data?) {
         self.statusCode = statusCode
         self.error = error
         self.data = data
     }
 
-    init(statusCode: Int, error: Error?, json: String?) {
+    public init(statusCode: Int, error: Error?, json: String?) {
         self.statusCode = statusCode
         self.error = error
         self.data = json.flatMap { $0.data(using: .utf8) }
