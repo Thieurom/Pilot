@@ -7,40 +7,40 @@
 
 import Foundation
 
-class MockingURLProtocol: URLProtocol {
+public final class MockingURLProtocol: URLProtocol {
 
-    enum Error: Swift.Error, LocalizedError, CustomDebugStringConvertible {
+    public enum Error: Swift.Error, LocalizedError, CustomDebugStringConvertible {
 
         case missingMock
 
-        var errorDescription: String? { debugDescription }
+        public var errorDescription: String? { debugDescription }
 
-        var debugDescription: String {
+        public var debugDescription: String {
             switch self {
             case .missingMock: return "Missing mock"
             }
         }
     }
 
-    static var mock: Mock?
+    public static var mock: Mock?
     private var dataTask: URLSessionDataTask?
 
-    static func urlSession() -> URLSession {
+    public static func urlSession() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockingURLProtocol.self]
         let urlSession = URLSession(configuration: configuration)
         return urlSession
     }
 
-    override class func canInit(with request: URLRequest) -> Bool {
+    public override class func canInit(with request: URLRequest) -> Bool {
         return true
     }
 
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+    public override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         return request
     }
 
-    override func startLoading() {
+    public override func startLoading() {
         guard let mock = Self.mock else {
             client?.urlProtocol(self, didFailWithError: Error.missingMock)
             return
@@ -62,7 +62,7 @@ class MockingURLProtocol: URLProtocol {
         client?.urlProtocolDidFinishLoading(self)
     }
 
-    override func stopLoading() {
+    public override func stopLoading() {
         dataTask?.cancel()
     }
 }
@@ -71,7 +71,7 @@ class MockingURLProtocol: URLProtocol {
 
 extension Mock {
 
-    var httpResponse: HTTPURLResponse? {
+    fileprivate var httpResponse: HTTPURLResponse? {
         .init(
             url: URL(string: "/")!,
             statusCode: statusCode,
