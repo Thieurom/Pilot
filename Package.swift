@@ -17,6 +17,10 @@ let package = Package(
             targets: ["Pilot"]
         ),
         .library(
+            name: "PilotTestSupport",
+            targets: ["PilotTestSupport"]
+        ),
+        .library(
             name: "PilotType",
             targets: ["PilotType"]
         )
@@ -28,12 +32,16 @@ let package = Package(
             dependencies: ["PilotType"]
         ),
         .target(
+            name: "PilotTestSupport",
+            dependencies: []
+        ),
+        .target(
             name: "PilotType",
             dependencies: []
         ),
         .testTarget(
             name: "PilotTests",
-            dependencies: ["Pilot", "PilotType"]
+            dependencies: ["Pilot", "PilotTestSupport"]
         )
     ]
 )
