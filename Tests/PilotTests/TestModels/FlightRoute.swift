@@ -38,7 +38,7 @@ extension FlightRoute: Route {
         }
     }
 
-    var httpHeaders: HttpHeaders { [:] }
+    var httpHeaders: HttpHeaders { .empty }
 
     var parameters: Parameters? {
         switch self {
