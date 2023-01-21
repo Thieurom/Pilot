@@ -86,6 +86,7 @@ extension Pilot {
 
         do {
             let (data, response) = try await session.data(for: request)
+            processResponse(data: data, response: response)
             return Response(httpResponse: response as? HTTPURLResponse, data: data)
         } catch {
             Self.debugLog(error: error)
@@ -98,7 +99,8 @@ extension Pilot {
         Self.debugLog(info: "Request: \(request)\n\(request.allHTTPHeaderFields ?? [:])")
 
         do {
-            let (data, _) = try await session.data(for: request)
+            let (data, response) = try await session.data(for: request)
+            processResponse(data: data, response: response)
             return try decoder.decode(T.self, from: data)
         } catch {
             Self.debugLog(error: error)
@@ -111,7 +113,8 @@ extension Pilot {
         Self.debugLog(info: "Request: \(request)\n\(request.allHTTPHeaderFields ?? [:])")
 
         do {
-            let (data, _) = try await session.data(for: request)
+            let (data, response) = try await session.data(for: request)
+            processResponse(data: data, response: response)
             return try decodeApi(target: T.self, failure: E.self, from: data, decoder: decoder)
         } catch {
             Self.debugLog(error: error)
